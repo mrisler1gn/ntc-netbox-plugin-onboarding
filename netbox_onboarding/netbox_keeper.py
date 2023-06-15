@@ -402,7 +402,7 @@ class NetboxKeeper:
     def ensure_interface(self):
         """Ensures that the interface associated with the mgmt_ipaddr exists and is assigned to the device."""
         if self.netdev_mgmt_ifname:
-            self.nb_mgmt_ifname, _ = Interface.objects.get_or_create(name=self.netdev_mgmt_ifname, device=self.device)
+            self.nb_mgmt_ifname, _ = Interface.objects.get_or_create(name=self.netdev_mgmt_ifname, device=self.device, mtu=1500)
 
     def ensure_primary_ip(self):
         """Ensure mgmt_ipaddr exists in IPAM, has the device interface, and is assigned as the primary IP address."""
