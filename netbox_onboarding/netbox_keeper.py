@@ -408,7 +408,7 @@ class NetboxKeeper:
     def ensure_interface(self):
         """Ensures that the interface associated with the mgmt_ipaddr exists and is assigned to the device."""
         if self.netdev_mgmt_ifname:
-            self.nb_mgmt_ifname, _ = Interface.objects.get_or_create(name=self.netdev_mgmt_ifname, device=self.device, mtu=1500)
+            self.nb_mgmt_ifname, _ = Interface.objects.get_or_create(name=self.netdev_mgmt_ifname, device=self.device)
 
     def ensure_primary_ip(self):
         """Ensure mgmt_ipaddr exists in IPAM, has the device interface, and is assigned as the primary IP address."""
@@ -436,9 +436,10 @@ class NetboxKeeper:
               if_addr = list(self.netdev_ifs[if_name]['ipv4'].keys())[0]
               if_addr_prefix = self.netdev_ifs[if_name][list(self.netdev_ifs[if_name].keys())[0]][if_addr]["prefix_length"]
               self.nb_ip, created = IPAddress.objects.get_or_create(address=f"{if_addr}/{if_addr_prefix}")
-              logger.info("ASSIGN: IP address %s to %s", self.nb_ip.address, self.nb_ifname.name)
-              self.nb_ifname.ip_addresses.add(self.nb_ip)
-              self.nb_ifname.save()
+              if created or not self.nb_ip in self.nb_ifname.ip_addresses.all():
+                logger.info("ASSIGN: IP address %s to %s", self.nb_ip.address, self.nb_ifname.name)
+                self.nb_ifname.ip_addresses.add(self.nb_ip)
+                self.nb_ifname.save()
 
 
     def ensure_device(self):
