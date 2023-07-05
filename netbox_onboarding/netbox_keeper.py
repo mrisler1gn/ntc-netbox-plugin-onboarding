@@ -87,6 +87,8 @@ class NetboxKeeper:
         netdev_netmiko_device_type=None,
         onboarding_class=None,
         driver_addon_result=None,
+        netdev_ifs=None,
+        netdev_data_ifs=None,
     ):
         """Create an instance and initialize the managed attributes that are used throughout the onboard processing.
 
@@ -137,6 +139,8 @@ class NetboxKeeper:
         self.onboarded_device = None
         self.nb_mgmt_ifname = None
         self.nb_primary_ip = None
+        self.netdev_ifs = netdev_ifs
+        self.netdev_data_ifs = netdev_data_ifs
 
     def ensure_onboarded_device(self):
         """Lookup if the device already exists in the NetBox.
@@ -421,6 +425,17 @@ class NetboxKeeper:
             self.device.primary_ip4 = self.nb_primary_ip
             self.device.save()
 
+    def ensure_interfaces(self):
+        """Ensures that all the interfaces with ipaddr exists and are assigned to the device."""
+        if self.netdev_ifs and self.netdev_data_ifs:
+          for if_name, if_values in self.netdev_data_ifs.items():
+            if if_name in self.netdev_ifs:
+              Interface.objects.get_or_create(name=if_name, device=self.device, mtu=if_values['mtu'], mac_address=if_values['mac_address'])
+              if_addr = list(self.netdev_ifs[if_name]['ipv4'].keys())[0]
+              if_addr_prefix = self.netdev_ifs[if_name][list(self.netdev_ifs[if_name].keys())[0]][if_addr]["prefix_length"]
+              IPAddress.objects.get_or_create(address=f"{if_addr}/{if_addr_prefix}")
+
+
     def ensure_device(self):
         """Ensure that the device represented by the DevNetKeeper exists in the NetBox system."""
         self.ensure_onboarded_device()
@@ -430,6 +445,7 @@ class NetboxKeeper:
         self.ensure_device_role()
         self.ensure_device_platform()
         self.ensure_device_instance()
+        self.ensure_interfaces()
 
         if PLUGIN_SETTINGS["create_management_interface_if_missing"]:
             self.ensure_interface()

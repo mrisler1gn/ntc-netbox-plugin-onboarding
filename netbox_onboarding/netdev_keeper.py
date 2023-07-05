@@ -106,6 +106,7 @@ class NetdevKeeper:
 
         self.facts = None
         self.ip_ifs = None
+        self.data_ifs = None
         self.netmiko_device_type = None
         self.onboarding_class = StandaloneOnboarding
         self.driver_addon_result = None
@@ -261,6 +262,9 @@ class NetdevKeeper:
 
             logger.info("COLLECT: device interface IPs")
             self.ip_ifs = napalm_device.get_interfaces_ip()
+            
+            logger.info("COLLECT: device interfaces Data")
+            self.data_ifs = napalm_device.get_interfaces()
 
             module_name = PLUGIN_SETTINGS["onboarding_extensions_map"].get(self.napalm_driver)
 
@@ -306,6 +310,8 @@ class NetdevKeeper:
             "netdev_netmiko_device_type": self.netmiko_device_type,
             "onboarding_class": self.onboarding_class,
             "driver_addon_result": self.driver_addon_result,
+            "netdev_ifs": self.ip_ifs,
+            "netdev_data_ifs": self.data_ifs,
         }
 
         return netdev_dict
