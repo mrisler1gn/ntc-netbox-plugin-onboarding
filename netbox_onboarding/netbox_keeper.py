@@ -431,15 +431,14 @@ class NetboxKeeper:
         """Ensures that all the interfaces with ipaddr exists and are assigned to the device."""
         if self.netdev_ifs and self.netdev_data_ifs:
           for if_name, if_values in self.netdev_data_ifs.items():
-            if if_name in self.netdev_ifs:
+            if if_name in self.netdev_ifs and if_name != self.netdev_mgmt_ifname:
               self.nb_ifname, _ = Interface.objects.get_or_create(name=if_name, device=self.device, mtu=if_values['mtu'], mac_address=if_values['mac_address'])
               if_addr = list(self.netdev_ifs[if_name]['ipv4'].keys())[0]
               if_addr_prefix = self.netdev_ifs[if_name][list(self.netdev_ifs[if_name].keys())[0]][if_addr]["prefix_length"]
               self.nb_ip, created = IPAddress.objects.get_or_create(address=f"{if_addr}/{if_addr_prefix}")
-              if created or not self.nb_ip in self.nb_ifname.ip_addresses.all():
-                logger.info("ASSIGN: IP address %s to %s", self.nb_ip.address, self.nb_ifname.name)
-                self.nb_ifname.ip_addresses.add(self.nb_ip)
-                self.nb_ifname.save()
+              logger.info("ASSIGN: IP address %s to %s", self.nb_ip.address, self.nb_ifname.name)
+              self.nb_ifname.ip_addresses.add(self.nb_ip)
+              self.nb_ifname.save()
 
 
     def ensure_device(self):
