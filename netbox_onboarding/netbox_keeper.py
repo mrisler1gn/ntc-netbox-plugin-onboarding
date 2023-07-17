@@ -427,18 +427,34 @@ class NetboxKeeper:
             self.device.primary_ip4 = self.nb_primary_ip
             self.device.save()
 
+            
+    def ensure_physical_interfaces_mac(self):
+    """Ensures that all the physical interfaces have their MAC address."""
+    if self.netdev_data_ifs:
+        for if_name, if_values in self.netdev_data_ifs.items():
+            try:
+                nb_ifname = Interface.objects.get(name=if_name, device=self.device)
+                nb_ifname.mac_address = if_values.get('mac_address')
+                nb_ifname.save()
+            except Interface.DoesNotExist:
+                pass
+
+            
+    
     def ensure_interfaces(self):
         """Ensures that all the interfaces with ipaddr exists and are assigned to the device."""
         if self.netdev_ifs and self.netdev_data_ifs:
           for if_name, if_values in self.netdev_data_ifs.items():
             if if_name in self.netdev_ifs and if_name != self.netdev_mgmt_ifname:
-              self.nb_ifname, _ = Interface.objects.get_or_create(name=if_name, device=self.device, mtu=if_values['mtu'], mac_address=if_values['mac_address'])
+              self.nb_ifname, _ = Interface.objects.get_or_create(name=if_name, device=self.device, mtu=if_values['mtu'])
               if_addr = list(self.netdev_ifs[if_name]['ipv4'].keys())[0]
               if_addr_prefix = self.netdev_ifs[if_name][list(self.netdev_ifs[if_name].keys())[0]][if_addr]["prefix_length"]
               self.nb_ip, created = IPAddress.objects.get_or_create(address=f"{if_addr}/{if_addr_prefix}")
               logger.info("ASSIGN: IP address %s to %s", self.nb_ip.address, self.nb_ifname.name)
               self.nb_ifname.ip_addresses.add(self.nb_ip)
               self.nb_ifname.save()
+            
+
 
 
     def ensure_device(self):
@@ -455,4 +471,5 @@ class NetboxKeeper:
             self.ensure_interface()
             self.ensure_primary_ip()
 
+        self.ensure_physical_interfaces_mac()
         self.ensure_interfaces()
