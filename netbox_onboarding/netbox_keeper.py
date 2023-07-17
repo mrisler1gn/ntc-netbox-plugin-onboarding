@@ -430,14 +430,14 @@ class NetboxKeeper:
             
     def ensure_physical_interfaces_mac(self):
     """Ensures that all the physical interfaces have their MAC address."""
-    if self.netdev_data_ifs:
-        for if_name, if_values in self.netdev_data_ifs.items():
-            try:
-                nb_ifname = Interface.objects.get(name=if_name, device=self.device)
-                nb_ifname.mac_address = if_values.get('mac_address')
-                nb_ifname.save()
-            except Interface.DoesNotExist:
-                pass
+        if self.netdev_data_ifs:
+            for if_name, if_values in self.netdev_data_ifs.items():
+                try:
+                    nb_ifname = Interface.objects.get(name=if_name, device=self.device)
+                    nb_ifname.mac_address = if_values.get('mac_address')
+                    nb_ifname.save()
+                except Interface.DoesNotExist:
+                    pass
 
             
     
