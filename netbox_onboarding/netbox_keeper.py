@@ -429,7 +429,7 @@ class NetboxKeeper:
 
             
     def ensure_physical_interfaces_mac(self):
-    """Ensures that all the physical interfaces have their MAC address."""
+        """Ensures that all the physical interfaces have their MAC address."""
         if self.netdev_data_ifs:
             for if_name, if_values in self.netdev_data_ifs.items():
                 try:
