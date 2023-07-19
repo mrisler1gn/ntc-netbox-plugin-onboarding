@@ -464,7 +464,7 @@ class NetboxKeeper:
                         self.nb_ifname.type = "virtual"
                         for parent_ifname in self.parent_ifname:
                             if re.search(re.escape(parent_ifname), self.nb_ifname.name):
-                                self.nb_ifname.parent = str(parent_ifname)
+                                self.nb_ifname.parent = parent_ifname
                     self.nb_ifname.save()
     
  
