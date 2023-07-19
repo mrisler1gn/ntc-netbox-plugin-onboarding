@@ -437,14 +437,15 @@ class NetboxKeeper:
         """Ensures that all the physical interfaces have their MAC address and MTU."""
         if self.netdev_data_ifs:
             for if_name, if_values in self.netdev_data_ifs.items():
-                try:
-                    nb_ifname = Interface.objects.get(name=if_name, device=self.device)
-                    nb_ifname.mac_address = if_values.get('mac_address')
-                    nb_ifname.mtu = if_values.get('mtu')
-                    nb_ifname.save()
-                    self.parent_ifname.append(str(nb_ifname))
-                except Interface.DoesNotExist:
-                    pass
+                if if_name != self.netdev_mgmt_ifname:
+                    try:
+                        nb_ifname = Interface.objects.get(name=if_name, device=self.device)
+                        nb_ifname.mac_address = if_values.get('mac_address')
+                        nb_ifname.mtu = if_values.get('mtu')
+                        nb_ifname.save()
+                        self.parent_ifname.append(str(nb_ifname))
+                    except Interface.DoesNotExist:
+                        pass
 
             
     
