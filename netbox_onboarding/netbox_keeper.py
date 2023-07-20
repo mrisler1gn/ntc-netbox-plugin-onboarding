@@ -439,7 +439,7 @@ class NetboxKeeper:
             for if_name, if_values in self.netdev_data_ifs.items():
                 try:
                     nb_ifname = Interface.objects.get(name=if_name, device=self.device)
-                    if if_values.get('mac_address'):
+                    if nb_ifname.type != "virtual":
                         nb_ifname.mac_address = if_values.get('mac_address')
                     if if_values.get('mtu'):
                         nb_ifname.mtu = if_values.get('mtu')
