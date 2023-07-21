@@ -444,7 +444,10 @@ class NetboxKeeper:
                     if if_values.get('mtu'):
                         nb_ifname.mtu = if_values.get('mtu')
                     nb_ifname.save()
-                    self.parent_ifname.append(str(nb_ifname))
+                    if self.netdev_vendor = 'MikroTik'
+                        self.parent_ifname.append(str(nb_ifname))
+                    else:
+                        self.parent_ifname.append(str(nb_ifname)+".")
                 except Interface.DoesNotExist:
                     pass
 
