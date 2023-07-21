@@ -458,7 +458,7 @@ class NetboxKeeper:
                     self.nb_ifname, created  = Interface.objects.get_or_create(name=if_name, device=self.device, mtu=if_values['mtu'])
                     if_addr = list(self.netdev_ifs[if_name]['ipv4'].keys())[0]
                     if_addr_prefix = self.netdev_ifs[if_name][list(self.netdev_ifs[if_name].keys())[0]][if_addr]["prefix_length"]
-                    self.nb_ip, created = IPAddress.objects.get_or_create(address=f"{if_addr}/{if_addr_prefix}")
+                    self.nb_ip, _ = IPAddress.objects.get_or_create(address=f"{if_addr}/{if_addr_prefix}")
                     logger.info("ASSIGN: IP address %s to %s", self.nb_ip.address, self.nb_ifname.name)
                     self.nb_ifname.ip_addresses.add(self.nb_ip)
                     # Configure subinterfaces as type virtual and associate them to its parent interface when appropiate.
