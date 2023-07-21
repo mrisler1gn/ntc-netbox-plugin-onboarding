@@ -444,10 +444,7 @@ class NetboxKeeper:
                     if if_values.get('mtu'):
                         nb_ifname.mtu = if_values.get('mtu')
                     nb_ifname.save()
-                    if self.netdev_vendor == 'MikroTik':
-                        self.parent_ifname.append(str(nb_ifname))
-                    else:
-                        self.parent_ifname.append(str(nb_ifname)+".")
+                    self.parent_ifname.append(str(nb_ifname))
                 except Interface.DoesNotExist:
                     pass
 
@@ -468,9 +465,14 @@ class NetboxKeeper:
                     if created:
                         self.nb_ifname.type = "virtual"
                         for parent_ifname in self.parent_ifname:
-                            if re.search(re.escape(parent_ifname), self.nb_ifname.name):
-                                parent_interface = Interface.objects.get(name=parent_ifname)
-                                self.nb_ifname.parent = parent_interface
+                            if self.netdev_vendor == 'Mikrotik':
+                                if re.search(re.escape(parent_ifname), self.nb_ifname.name):
+                                    parent_interface = Interface.objects.get(name=parent_ifname)
+                                    self.nb_ifname.parent = parent_interface
+                            else:
+                                if re.search(re.escape(parent_ifname+"."), self.nb_ifname.name):
+                                    parent_interface = Interface.objects.get(name=parent_ifname)
+                                    self.nb_ifname.parent = parent_interface
                     self.nb_ifname.save()
     
  
