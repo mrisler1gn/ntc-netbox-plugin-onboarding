@@ -409,7 +409,7 @@ class NetboxKeeper:
     def ensure_interface(self):
         """Ensures that the interface associated with the mgmt_ipaddr exists and is assigned to the device."""
         if self.netdev_mgmt_ifname:
-            self.nb_mgmt_ifname, created = Interface.objects.get_or_create(name=self.netdev_mgmt_ifname, device=self.device, mgmt_only=True)
+            self.nb_mgmt_ifname, created = Interface.objects.get_or_create(name=self.netdev_mgmt_ifname, device=self.device)
             if created:
                 self.nb_mgmt_ifname.type = "virtual"
                 self.nb_mgmt_ifname.save()
