@@ -467,11 +467,11 @@ class NetboxKeeper:
                         for parent_ifname in self.parent_ifname:
                             if self.netdev_vendor == 'Mikrotik':
                                 if re.search(re.escape(parent_ifname), self.nb_ifname.name):
-                                    parent_interface = Interface.objects.get(name=parent_ifname)
+                                    parent_interface = Interface.objects.get(name=parent_ifname, device=self.device)
                                     self.nb_ifname.parent = parent_interface
                             else:
                                 if re.search(re.escape(parent_ifname+"."), self.nb_ifname.name):
-                                    parent_interface = Interface.objects.get(name=parent_ifname)
+                                    parent_interface = Interface.objects.get(name=parent_ifname, device=self.device)
                                     self.nb_ifname.parent = parent_interface
                     self.nb_ifname.save()
     
