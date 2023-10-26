@@ -24,6 +24,7 @@ from netmiko.ssh_autodetect import SSHDetect
 from netmiko.exceptions import NetMikoAuthenticationException
 from netmiko.exceptions import NetMikoTimeoutException
 from paramiko.ssh_exception import SSHException
+import napalm_datacom
 
 from netbox_onboarding.onboarding.onboarding import StandaloneOnboarding
 from .constants import NETMIKO_TO_NAPALM_STATIC
@@ -266,6 +267,10 @@ class NetdevKeeper:
             logger.info("COLLECT: device interfaces Data")
             self.data_ifs = napalm_device.get_interfaces()
 
+            if self.napalm_driver == "napalm_datacom":
+                logger.info("COLLECT: device VLANs")
+                self.vlans = napalm_device.get_vlans_membership()
+
             module_name = PLUGIN_SETTINGS["onboarding_extensions_map"].get(self.napalm_driver)
 
             if module_name and self.load_driver_extension:
@@ -312,6 +317,7 @@ class NetdevKeeper:
             "driver_addon_result": self.driver_addon_result,
             "netdev_ifs": self.ip_ifs,
             "netdev_data_ifs": self.data_ifs,
+            "netdev_vlans": self.vlans
         }
 
         return netdev_dict

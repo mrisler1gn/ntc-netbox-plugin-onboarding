@@ -20,7 +20,7 @@ from django.utils.text import slugify
 from dcim.models import Manufacturer, Device, Interface, DeviceType, DeviceRole
 from dcim.models import Platform
 from dcim.models import Site
-from ipam.models import IPAddress
+from ipam.models import IPAddress, VLANGroup, VLAN
 
 from .constants import NETMIKO_TO_NAPALM_STATIC
 from .exceptions import OnboardException
@@ -89,6 +89,7 @@ class NetboxKeeper:
         driver_addon_result=None,
         netdev_ifs=None,
         netdev_data_ifs=None,
+        netdev_vlans=None,
     ):
         """Create an instance and initialize the managed attributes that are used throughout the onboard processing.
 
@@ -141,9 +142,12 @@ class NetboxKeeper:
         self.nb_primary_ip = None
         self.netdev_ifs = netdev_ifs
         self.netdev_data_ifs = netdev_data_ifs
+        self.netdev_vlans = netdev_vlans
         self.nb_ifname = None
         self.nb_ip = None
         self.parent_ifname = []
+        self.POP_ID = self.netdev_hostname[:4].upper()
+
 
     def ensure_onboarded_device(self):
         """Lookup if the device already exists in the NetBox.
@@ -475,7 +479,42 @@ class NetboxKeeper:
                                     self.nb_ifname.parent = parent_interface
                     self.nb_ifname.save()
     
- 
+
+    
+    def ensure_vlans(self):
+        """Ensures that vlans are associated with their corresponding VLANGroup and device's interface"""
+        if self.netdev_vlans:
+            VLANGroup.objects.get_or_create(name=self.POP_ID, slug=self.POP_ID.lower())
+            for vlan, vlan_metadata in self.netdev_vlans.items():
+                nb_vlan = VLANGroup.objects.get(vid=vlan, group=self.POP_ID)
+                if vlan >= 100 and nb_vlan.status == "active": #check if this is a customer_service vlan and is available.
+                    nb_vlan.name = "Customer_Service"
+                    nb_vlan.status = "reserved"
+                    nb_vlan.save()
+                    for interface in vlan_metadata.get("interfaces", []):
+                        nb_ifname = Interface.objects.get(name=interface.split("|")[1], device=self.device)
+                        if interface[0] == "T":
+                            nb_ifname.tagged_vlans = vlan
+                            nb_ifname.save()
+                        if interface[0] == "U":
+                            nb_ifname.untagged_vlans = vlan
+                            nb_ifname.save()    
+                if vlan < 100 and nb_vlan.status == "active": #check if this is a core vlan and is available.
+                    nb_vlan.name = vlan_metadata.get("name")
+                    nb_vlan.status = "reserved"
+                    nb_vlan.save()     
+                    for interface in vlan_metadata.get("interfaces", []):
+                        nb_ifname = Interface.objects.get(name=interface.split("|")[1], device=self.device)
+                        if interface[0] == "T":
+                            nb_ifname.tagged_vlans = vlan
+                            nb_ifname.save()
+                        if interface[0] == "U":
+                            nb_ifname.untagged_vlans = vlan
+                            nb_ifname.save() 
+
+
+
+            
 
 
 
@@ -495,3 +534,4 @@ class NetboxKeeper:
 
         self.ensure_physical_interfaces_data()
         self.ensure_interfaces_with_ipaddr()
+        self.ensure_vlans()

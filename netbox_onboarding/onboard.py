@@ -124,6 +124,7 @@ class OnboardingManager:
             "driver_addon_result": netdev_dict["driver_addon_result"],
             "netdev_ifs": netdev_dict["netdev_ifs"],
             "netdev_data_ifs": netdev_dict["netdev_data_ifs"],
+            "netdev_vlans": netdev_dict["netdev_vlans"],
         }
 
         onboarding_cls = netdev_dict["onboarding_class"]()
