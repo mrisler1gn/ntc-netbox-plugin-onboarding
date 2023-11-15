@@ -25,7 +25,7 @@ from netmiko.exceptions import NetMikoAuthenticationException
 from netmiko.exceptions import NetMikoTimeoutException
 from paramiko.ssh_exception import SSHException
 import napalm_datacom
-
+import imp
 from netbox_onboarding.onboarding.onboarding import StandaloneOnboarding
 from .constants import NETMIKO_TO_NAPALM_STATIC
 from .exceptions import OnboardException
@@ -236,7 +236,12 @@ class NetdevKeeper:
 
             # Raise if no Napalm Driver not selected
             self.check_napalm_driver_name()
-
+            if self.napalm_driver == "datacom":
+	        imp.find_module("napalm_datacom")
+                try:
+                    imp.find_module("napalm_datacom.netmiko.ssh_dispatcher")
+                except:
+                    print("Fallo el modulo netmiko de Datacom")    
             driver = get_network_driver(self.napalm_driver)
 
             # Create NAPALM optional arguments
