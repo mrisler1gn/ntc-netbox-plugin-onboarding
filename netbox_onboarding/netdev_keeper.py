@@ -237,7 +237,7 @@ class NetdevKeeper:
             # Raise if no Napalm Driver not selected
             self.check_napalm_driver_name()
             if self.napalm_driver == "datacom":
-	        imp.find_module("napalm_datacom")
+                imp.find_module("napalm_datacom")
                 try:
                     imp.find_module("napalm_datacom.netmiko.ssh_dispatcher")
                 except:
