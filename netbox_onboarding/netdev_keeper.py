@@ -108,6 +108,7 @@ class NetdevKeeper:
         self.facts = None
         self.ip_ifs = None
         self.data_ifs = None
+        self.vlans = None
         self.netmiko_device_type = None
         self.onboarding_class = StandaloneOnboarding
         self.driver_addon_result = None
