@@ -484,34 +484,45 @@ class NetboxKeeper:
     def ensure_vlans(self):
         """Ensures that vlans are associated with their corresponding VLANGroup and device's interface"""
         if self.netdev_vlans:
-            VLANGroup.objects.get_or_create(name=self.POP_ID, slug=self.POP_ID.lower())
+            VLANGroup_ID, created = VLANGroup.objects.get_or_create(name=self.POP_ID, slug=self.POP_ID.lower())
+            VG_I = VLANGroup.objects.get(pk=VLANGroup_ID.pk)
             for vlan, vlan_metadata in self.netdev_vlans.items():
-                nb_vlan = VLANGroup.objects.get(vid=vlan, group=self.POP_ID)
-                if vlan >= 100 and nb_vlan.status == "active": #check if this is a customer_service vlan and is available.
-                    nb_vlan.name = "Customer_Service"
+                nb_vlan, _ = VLAN.objects.get_or_create(vid=vlan, group=VG_I)
+                if int(vlan) >= 100 and nb_vlan.status == "active": #check if this is a customer_service vlan and is available.
+                    if vlan_metadata.get("name"):
+                        nb_vlan.name = f"{vlan_metadata.get('name')}"+f"_VLAN_{vlan}"
+                    else:
+                        nb_vlan.name = f"VLAN_{vlan}"
                     nb_vlan.status = "reserved"
                     nb_vlan.save()
-                    for interface in vlan_metadata.get("interfaces", []):
-                        nb_ifname = Interface.objects.get(name=interface.split("|")[1], device=self.device)
-                        if interface[0] == "T":
-                            nb_ifname.tagged_vlans = vlan
-                            nb_ifname.save()
-                        if interface[0] == "U":
-                            nb_ifname.untagged_vlans = vlan
-                            nb_ifname.save()    
-                if vlan < 100 and nb_vlan.status == "active": #check if this is a core vlan and is available.
-                    nb_vlan.name = vlan_metadata.get("name")
+                elif int(vlan) < 100 and nb_vlan.status == "active": #check if this is a core vlan and is available.
+                    if vlan_metadata.get("name"):
+                        nb_vlan.name = f"{vlan_metadata.get('name')}"+f"_VLAN_{vlan}"
+                    else:
+                        nb_vlan.name = f"VLAN_{vlan}"
                     nb_vlan.status = "reserved"
-                    nb_vlan.save()     
-                    for interface in vlan_metadata.get("interfaces", []):
-                        nb_ifname = Interface.objects.get(name=interface.split("|")[1], device=self.device)
-                        if interface[0] == "T":
-                            nb_ifname.tagged_vlans = vlan
+                    nb_vlan.save()
+                for interface in vlan_metadata.get("interfaces", []):
+                    nb_ifname = Interface.objects.get(name=interface.split("|")[1], device=self.device)
+                    if nb_ifname:
+                        vlan_instance = VLAN.objects.get(vid=vlan, group=VG_I)
+                        interface_type, *_ = interface.split("|")
+                        if interface_type == "T":
+                            if not nb_ifname.mode or nb_ifname.mode == "access":
+                                nb_ifname.mode = "tagged"
+                            nb_ifname.tagged_vlans.add(vlan_instance.id)
                             nb_ifname.save()
-                        if interface[0] == "U":
-                            nb_ifname.untagged_vlans = vlan
-                            nb_ifname.save() 
-
+                        elif interface_type == "U":
+                            if not nb_ifname.mode:
+                                 nb_ifname.mode = "access"
+                                 nb_ifname.untagged_vlan = vlan_instance
+                                 nb_ifname.save()
+                            elif nb_ifname.mode == "tagged":
+                                 nb_ifname.untagged_vlan = vlan_instance
+                                 nb_ifname.save()
+                 
+                    
+                            
 
 
             
